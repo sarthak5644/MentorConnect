@@ -1,0 +1,230 @@
+erDiagram
+    ROLES {
+        int id PK
+        enum name "super_admin, mentor, student"
+        string description
+    }
+
+    USERS {
+        int id PK
+        string full_name
+        string email "unique"
+        string mobile_number "unique"
+        string hashed_password
+        int role_id FK
+        enum status "active, blocked, pending, deactivated"
+        bool is_email_verified
+        bool is_mobile_verified
+        string profile_image_url
+        int token_version
+        datetime last_login_at
+    }
+
+    STUDENTS {
+        int id PK
+        int user_id FK "unique, 1:1 with users"
+        string institution_name
+        string education_level
+        string field_of_study
+        date date_of_birth
+        string bio
+        string city
+        string country
+        string interests
+    }
+
+    MENTORS {
+        int id PK
+        int user_id FK "unique, 1:1 with users"
+        string headline
+        text bio
+        int years_of_experience
+        string current_organization
+        string designation
+        text qualifications "JSON"
+        text achievements "JSON"
+        float hourly_rate
+        string city
+        string country
+        enum approval_status "pending, approved, rejected"
+        int approved_by_admin_id FK
+        float average_rating
+        int total_ratings
+        int total_sessions_completed
+        bool is_accepting_requests
+    }
+
+    MENTOR_DOCUMENTS {
+        int id PK
+        int mentor_id FK
+        string document_type
+        string file_name
+        string file_path
+        int file_size_bytes
+        string mime_type
+        enum status "pending, verified, rejected"
+        int reviewed_by_admin_id FK
+    }
+
+    MENTOR_AVAILABILITY_SLOTS {
+        int id PK
+        int mentor_id FK
+        datetime start_time
+        datetime end_time
+        enum status "available, booked, blocked"
+    }
+
+    MENTORSHIP_REQUESTS {
+        int id PK
+        int student_id FK
+        int mentor_id FK
+        text message
+        enum status "pending, accepted, rejected, cancelled"
+        datetime responded_at
+        string response_note
+    }
+
+    BOOKINGS {
+        int id PK
+        int student_id FK
+        int mentor_id FK
+        int slot_id FK "unique, 1:1 with slot"
+        enum status "scheduled, completed, cancelled, no_show"
+        string meeting_link
+        text notes
+    }
+
+    CHATS {
+        int id PK
+        int mentorship_request_id FK "unique, 1:1"
+        bool is_active
+        datetime last_message_at
+    }
+
+    MESSAGES {
+        int id PK
+        int chat_id FK
+        int sender_id FK
+        enum message_type "text, image, file"
+        text content
+        string attachment_path
+        bool is_read
+    }
+
+    NOTIFICATIONS {
+        int id PK
+        int user_id FK
+        enum type "mentorship_request, booking, chat_message, system, account, complaint"
+        string title
+        text body
+        int reference_id
+        bool is_read
+    }
+
+    RATINGS {
+        int id PK
+        int booking_id FK "unique, 1:1"
+        int student_id FK
+        int mentor_id FK
+        int score "1-5"
+        text review
+    }
+
+    COMPLAINTS {
+        int id PK
+        int student_id FK
+        int against_user_id FK
+        int booking_id FK
+        string subject
+        text description
+        enum status "open, in_review, resolved, dismissed"
+        text admin_notes
+    }
+
+    OTP_VERIFICATIONS {
+        int id PK
+        int user_id FK
+        string destination
+        enum channel "email, sms"
+        enum purpose "email_verification, mobile_verification, password_reset, login_2fa"
+        string hashed_otp
+        int attempts
+        bool is_used
+        datetime expires_at
+    }
+
+    CAPTCHA_SESSIONS {
+        int id PK
+        string session_id "unique"
+        string hashed_answer
+        bool is_used
+        datetime expires_at
+    }
+
+    AUDIT_LOGS {
+        int id PK
+        int actor_user_id FK
+        enum action "create, update, delete, login, logout, approve, reject, block, unblock, other"
+        string entity_type
+        int entity_id
+        text description
+        string ip_address
+    }
+
+    CATEGORIES {
+        int id PK
+        string name "unique"
+        string description
+        bool is_active
+    }
+
+    FIELDS {
+        int id PK
+        int category_id FK
+        string name
+        bool is_active
+    }
+
+    MENTOR_FIELDS {
+        int mentor_id FK
+        int field_id FK
+    }
+
+    REFRESH_TOKENS {
+        int id PK
+        int user_id FK
+        string token_hash "unique"
+        bool is_revoked
+        datetime expires_at
+    }
+
+    ROLES ||--o{ USERS : "has many"
+    USERS ||--o| STUDENTS : "1:1"
+    USERS ||--o| MENTORS : "1:1"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    USERS ||--o{ OTP_VERIFICATIONS : "owns"
+    USERS ||--o{ REFRESH_TOKENS : "owns"
+    USERS ||--o{ AUDIT_LOGS : "performs"
+    USERS ||--o{ MESSAGES : "sends"
+
+    MENTORS ||--o{ MENTOR_DOCUMENTS : "uploads"
+    MENTORS ||--o{ MENTOR_AVAILABILITY_SLOTS : "defines"
+    MENTORS ||--o{ MENTORSHIP_REQUESTS : "receives"
+    MENTORS ||--o{ BOOKINGS : "has"
+    MENTORS ||--o{ RATINGS : "receives"
+    MENTORS }o--o{ FIELDS : "expertise (via MENTOR_FIELDS)"
+
+    STUDENTS ||--o{ MENTORSHIP_REQUESTS : "sends"
+    STUDENTS ||--o{ BOOKINGS : "makes"
+    STUDENTS ||--o{ RATINGS : "gives"
+    STUDENTS ||--o{ COMPLAINTS : "files"
+
+    MENTORSHIP_REQUESTS ||--o| CHATS : "creates on accept"
+    CHATS ||--o{ MESSAGES : "contains"
+
+    MENTOR_AVAILABILITY_SLOTS ||--o| BOOKINGS : "booked as"
+    BOOKINGS ||--o| RATINGS : "rated via"
+    BOOKINGS ||--o{ COMPLAINTS : "may relate to"
+
+    CATEGORIES ||--o{ FIELDS : "groups"
+    FIELDS }o--o{ MENTORS : "via MENTOR_FIELDS"
