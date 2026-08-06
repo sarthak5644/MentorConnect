@@ -16,3 +16,24 @@ uploads/
 # IDE
 .vscode/
 .idea/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.env
+
+# Node
+node_modules/
+mentorconnect-frontend/node_modules/
+
+# Build
+dist/
+mentorconnect-frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
