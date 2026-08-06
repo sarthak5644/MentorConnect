@@ -6,6 +6,7 @@ import { Input, Select, Button, useToast } from '@/components/ui';
 import CaptchaField from '@/components/auth/CaptchaField';
 import { extractErrorMessage } from '@/api/client';
 import { RegisterRequest, RoleName } from '@/types';
+import { OtpPurpose, OtpChannel } from '@/types';
 
 interface RegisterForm extends Omit<RegisterRequest, 'captcha_session_id' | 'captcha_answer'> {
   confirm_password: string;
@@ -31,21 +32,24 @@ export default function Register() {
     }
     setCaptchaError('');
     setLoading(true);
-    try {
-      const { confirm_password, ...rest } = data;
-      await registerUser({
-        ...rest,
-        role: data.role as RoleName.MENTOR | RoleName.STUDENT,
-        captcha_session_id: captchaSessionId,
-        captcha_answer: captchaAnswer,
-      });
-      showToast('Account created! Please verify your email.', 'success');
-      navigate('/login');
-    } catch (err) {
-      showToast(extractErrorMessage(err), 'error');
-    } finally {
-      setLoading(false);
-    }
+    // replace the try block's success branch in Register.tsx
+try {
+  const { confirm_password, ...rest } = data;
+  await registerUser({
+    ...rest,
+    role: data.role as RoleName.MENTOR | RoleName.STUDENT,
+    captcha_session_id: captchaSessionId,
+    captcha_answer: captchaAnswer,
+  });
+  showToast('Account created! Please verify your email.', 'success');
+  navigate('/verify-otp', {
+  state: { destination: data.email, purpose: OtpPurpose.EMAIL_VERIFICATION, channel: OtpChannel.EMAIL },
+});
+} catch (err) {
+  showToast(extractErrorMessage(err), 'error');
+} finally {
+  setLoading(false);
+}
   };
 
   return (

@@ -24,6 +24,8 @@ const ForgotPassword = lazy(() => import('@/pages/auth/ForgotPassword'));
 const ResetPassword = lazy(() => import('@/pages/auth/ResetPassword'));
 const Unauthorized = lazy(() => import('@/pages/Unauthorized'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
+// add near the other auth lazy imports
+const VerifyOtp = lazy(() => import('@/pages/auth/VerifyOtp'));
 
 // Student pages
 const StudentDashboard = lazy(() => import('@/pages/student/Dashboard'));
