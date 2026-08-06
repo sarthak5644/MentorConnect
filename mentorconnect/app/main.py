@@ -35,20 +35,6 @@ from app.db.seed import run_seed
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # ---------------- Startup ----------------
-    logger.info(f"Starting {settings.APP_NAME} in {settings.APP_ENV} mode...")
-    try:
-        run_seed()
-    #except Exception as exc:
-        # Don't crash the whole app if seeding fails (e.g. DB not ready yet on first
-        # docker-compose up) - migrations/health checks should be retried by the operator.
-     #   logger.error(f"Database seeding failed on startup: {exc}")
-    #yield
-
-    from contextlib import asynccontextmanager
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.APP_NAME} in {settings.APP_ENV} mode...")
 
     try:

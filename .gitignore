@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+.env
+.venv/
+
+# Frontend
+mentorconnect-frontend/node_modules/
+mentorconnect-frontend/dist/
+
+# Uploads/logs
+uploads/
+*.log
+
+# IDE
+.vscode/
+.idea/
