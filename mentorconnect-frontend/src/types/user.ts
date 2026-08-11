@@ -20,19 +20,42 @@ export interface User {
   created_at: string;
 }
 
+// The backend gates login behind a captcha, same as registration.
 export interface LoginRequest {
   email: string;
   password: string;
-}
-
-export interface RegisterRequest {
-  full_name: string;
-  email: string;
-  mobile_number?: string;
-  password: string;
-  role: RoleName.MENTOR | RoleName.STUDENT;
   captcha_session_id: string;
   captcha_answer: string;
+}
+
+// Registration is split into two distinct backend endpoints
+// (/auth/register/student, /auth/register/mentor) with different optional
+// fields — there is no single unified "role" registration payload.
+export interface StudentRegisterRequest {
+  full_name: string;
+  email: string;
+  mobile_number: string;
+  password: string;
+  captcha_session_id: string;
+  captcha_answer: string;
+  institution_name?: string;
+  education_level?: string;
+  field_of_study?: string;
+}
+
+export interface MentorRegisterRequest {
+  full_name: string;
+  email: string;
+  mobile_number: string;
+  password: string;
+  captcha_session_id: string;
+  captcha_answer: string;
+  headline?: string;
+  years_of_experience: number;
+  current_organization?: string;
+  designation?: string;
+  hourly_rate: number;
+  expertise_field_ids: number[];
 }
 
 export interface AuthTokens {
@@ -41,6 +64,9 @@ export interface AuthTokens {
   token_type: string;
 }
 
-export interface AuthResponse extends AuthTokens {
+// Real shape is { user, tokens }, not a flat object with the user spread
+// alongside the tokens.
+export interface LoginResponse {
   user: User;
+  tokens: AuthTokens;
 }
