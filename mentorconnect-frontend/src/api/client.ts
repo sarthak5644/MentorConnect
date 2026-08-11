@@ -17,6 +17,29 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+// The backend wraps every response as { success, message, data } and every
+// paginated list as { success, message, data: T[], total, page, page_size,
+// total_pages } (array under `data`, not `items`). This app's endpoint files
+// were written expecting the bare payload (and `items` for lists), so we
+// reshape here once instead of touching every endpoint file.
+apiClient.interceptors.response.use((response) => {
+  const body = response.data;
+  if (body && typeof body === 'object' && 'success' in body && 'data' in body) {
+    if ('total' in body && 'page_size' in body) {
+      response.data = {
+        items: body.data,
+        total: body.total,
+        page: body.page,
+        page_size: body.page_size,
+        total_pages: body.total_pages,
+      };
+    } else {
+      response.data = body.data !== null && body.data !== undefined ? body.data : { message: body.message };
+    }
+  }
+  return response;
+});
+
 let isRefreshing = false;
 let refreshQueue: Array<(token: string) => void> = [];
 
@@ -42,15 +65,18 @@ apiClient.interceptors.response.use(
         const refreshToken = store.getState().auth.refreshToken;
         if (!refreshToken) throw new Error('No refresh token');
 
-        const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {
+        // Raw axios (not apiClient) so the response-unwrap interceptor above
+        // doesn't apply here — unwrap this one manually.
+        const { data: envelope } = await axios.post(`${BASE_URL}/auth/refresh`, {
           refresh_token: refreshToken,
         });
+        const tokens = envelope.data;
 
-        store.dispatch(setTokens({ accessToken: data.access_token, refreshToken: data.refresh_token }));
-        refreshQueue.forEach((cb) => cb(data.access_token));
+        store.dispatch(setTokens({ accessToken: tokens.access_token, refreshToken: tokens.refresh_token }));
+        refreshQueue.forEach((cb) => cb(tokens.access_token));
         refreshQueue = [];
 
-        if (originalRequest.headers) originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
+        if (originalRequest.headers) originalRequest.headers.Authorization = `Bearer ${tokens.access_token}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
         store.dispatch(logout());
@@ -65,11 +91,11 @@ apiClient.interceptors.response.use(
   }
 );
 
+/** Backend error envelope is always { success: false, error_code, message, details }. */
 export function extractErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    const detail = error.response?.data?.detail;
-    if (typeof detail === 'string') return detail;
-    if (Array.isArray(detail)) return detail.map((d) => d.msg).join(', ');
+    const data = error.response?.data as { message?: string; details?: unknown } | undefined;
+    if (data?.message) return data.message;
     return error.message || 'Something went wrong';
   }
   return 'Something went wrong';
