@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Trophy, Plus, Trash2 } from 'lucide-react';
 import { mentorsApi } from '@/api/endpoints';
+import { parseJsonList } from '@/utils/parseJsonList';
 import { Achievement } from '@/types';
 import { Input, Textarea, Button, PageSpinner, EmptyState, useToast } from '@/components/ui';
 import { extractErrorMessage } from '@/api/client';
@@ -13,11 +14,11 @@ export default function MentorAchievements() {
   const [items, setItems] = useState<Achievement[]>([]);
 
   useEffect(() => {
-    if (profile) setItems(profile.achievements ?? []);
+    if (profile) setItems(parseJsonList<Achievement>(profile.profile.achievements));
   }, [profile]);
 
   const mutation = useMutation({
-    mutationFn: () => mentorsApi.updateProfile({ achievements: items } as any),
+    mutationFn: () => mentorsApi.updateAchievements(items),
     onSuccess: () => {
       showToast('Achievements saved', 'success');
       qc.invalidateQueries({ queryKey: ['mentor-profile'] });
