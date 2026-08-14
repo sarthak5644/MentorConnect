@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { GraduationCap, Plus, Trash2 } from 'lucide-react';
 import { mentorsApi } from '@/api/endpoints';
+import { parseJsonList } from '@/utils/parseJsonList';
 import { Qualification } from '@/types';
 import { Input, Button, PageSpinner, EmptyState, useToast } from '@/components/ui';
 import { extractErrorMessage } from '@/api/client';
@@ -13,11 +14,11 @@ export default function MentorQualifications() {
   const [items, setItems] = useState<Qualification[]>([]);
 
   useEffect(() => {
-    if (profile) setItems(profile.qualifications ?? []);
+    if (profile) setItems(parseJsonList<Qualification>(profile.profile.qualifications));
   }, [profile]);
 
   const mutation = useMutation({
-    mutationFn: () => mentorsApi.updateProfile({ qualifications: items } as any),
+    mutationFn: () => mentorsApi.updateQualifications(items),
     onSuccess: () => {
       showToast('Qualifications saved', 'success');
       qc.invalidateQueries({ queryKey: ['mentor-profile'] });
