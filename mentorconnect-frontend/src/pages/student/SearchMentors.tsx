@@ -14,7 +14,7 @@ export default function StudentSearchMentors() {
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list });
   const { data, isLoading } = useQuery({ queryKey: ['mentors-search', filters], queryFn: () => mentorsApi.search(filters) });
 
-  const onSearch = debounce((value: string) => setFilters((f) => ({ ...f, search: value, page: 1 })), 400);
+  const onSearch = debounce((value: string) => setFilters((f) => ({ ...f, keyword: value, page: 1 })), 400);
 
   return (
     <div>
