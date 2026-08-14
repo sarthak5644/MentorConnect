@@ -53,11 +53,11 @@ export default function AdminMentorApproval() {
               <div key={m.id} className="session-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-sm font-medium text-accent">
-                    {initials(m.user.full_name)}
+                    {initials(m.designation || `Mentor ${m.id}`)}
                   </div>
                   <div>
-                    <p className="font-medium text-ink-800 dark:text-ink-50">{m.user.full_name}</p>
-                    <p className="text-sm text-ink-400">{m.headline || m.user.email}</p>
+                    <p className="font-medium text-ink-800 dark:text-ink-50">Mentor #{m.id} (user #{m.user_id})</p>
+                    <p className="text-sm text-ink-400">{m.headline || m.designation || "No headline"}</p>
                     <div className="mt-1 flex flex-wrap gap-1">
                       {m.expertise_fields.slice(0, 3).map((f) => <Badge key={f.id}>{f.name}</Badge>)}
                     </div>
