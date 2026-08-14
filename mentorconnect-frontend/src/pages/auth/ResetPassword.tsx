@@ -30,7 +30,7 @@ export default function ResetPassword() {
     }
     setLoading(true);
     try {
-      await authApi.resetPassword({ email: data.email, otp, new_password: data.new_password });
+      await authApi.resetPassword({ email: data.email, otp_code: otp, password: data.new_password });
       showToast('Password reset successfully. Please log in.', 'success');
       navigate('/login');
     } catch (err) {
