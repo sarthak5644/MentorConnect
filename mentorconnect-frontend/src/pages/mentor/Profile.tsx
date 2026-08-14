@@ -1,19 +1,21 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { mentorsApi, categoriesApi } from '@/api/endpoints';
+import { mentorsApi } from '@/api/endpoints';
 import { MentorProfileUpdateRequest } from '@/types';
 import { Input, Textarea, Button, PageSpinner, useToast } from '@/components/ui';
 import { extractErrorMessage } from '@/api/client';
 
+// GET /mentors/me returns { user, profile } — mentor-editable fields live
+// under `profile`, not on the top-level response.
 export default function MentorProfile() {
   const { showToast } = useToast();
   const qc = useQueryClient();
 
-  const { data: profile, isLoading } = useQuery({ queryKey: ['mentor-profile'], queryFn: mentorsApi.getMyProfile });
-  const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list });
+  const { data, isLoading } = useQuery({ queryKey: ['mentor-profile'], queryFn: mentorsApi.getMyProfile });
+  const profile = data?.profile;
 
-  const { register, handleSubmit, reset, watch, setValue } = useForm<MentorProfileUpdateRequest>();
+  const { register, handleSubmit, reset } = useForm<MentorProfileUpdateRequest>();
 
   useEffect(() => {
     if (profile) {
@@ -28,7 +30,6 @@ export default function MentorProfile() {
         country: profile.country ?? '',
         linkedin_url: profile.linkedin_url ?? '',
         portfolio_url: profile.portfolio_url ?? '',
-        expertise_field_ids: profile.expertise_fields.map((f) => f.id),
       });
     }
   }, [profile, reset]);
@@ -43,14 +44,6 @@ export default function MentorProfile() {
   });
 
   if (isLoading) return <PageSpinner />;
-
-  const selectedFieldIds = watch('expertise_field_ids') ?? [];
-  const toggleField = (id: number) => {
-    const next = selectedFieldIds.includes(id)
-      ? selectedFieldIds.filter((f) => f !== id)
-      : [...selectedFieldIds, id];
-    setValue('expertise_field_ids', next);
-  };
 
   return (
     <div className="max-w-2xl">
@@ -73,26 +66,6 @@ export default function MentorProfile() {
         <div className="grid gap-4 sm:grid-cols-2">
           <Input label="LinkedIn URL" {...register('linkedin_url')} />
           <Input label="Portfolio URL" {...register('portfolio_url')} />
-        </div>
-
-        <div>
-          <label className="label-text">Expertise fields</label>
-          <div className="flex flex-wrap gap-2">
-            {categories?.flatMap((c) => c.fields ?? []).map((f) => (
-              <button
-                type="button"
-                key={f.id}
-                onClick={() => toggleField(f.id)}
-                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                  selectedFieldIds.includes(f.id)
-                    ? 'border-mentor bg-mentor/10 text-mentor'
-                    : 'border-ink-200 dark:border-ink-600 text-ink-500 hover:border-mentor'
-                }`}
-              >
-                {f.name}
-              </button>
-            ))}
-          </div>
         </div>
 
         <Button type="submit" isLoading={mutation.isPending}>Save changes</Button>
