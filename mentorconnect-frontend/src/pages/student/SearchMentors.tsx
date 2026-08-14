@@ -9,7 +9,7 @@ import { debounce, initials } from '@/lib/utils';
 
 export default function StudentSearchMentors() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<MentorSearchFilters>({ page: 1, page_size: 9, sort_by: 'rating' });
+  const [filters, setFilters] = useState<MentorSearchFilters>({ page: 1, page_size: 9 });
 
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list });
   const { data, isLoading } = useQuery({ queryKey: ['mentors-search', filters], queryFn: () => mentorsApi.search(filters) });
@@ -29,7 +29,7 @@ export default function StudentSearchMentors() {
           <option value="">All fields</option>
           {categories?.flatMap((c) => c.fields ?? []).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
         </Select>
-        <Select onChange={(e) => setFilters((f) => ({ ...f, sort_by: e.target.value as MentorSearchFilters['sort_by'], page: 1 }))} defaultValue="rating">
+        <Select onChange={(e) => setFilters((f) => ({ ...f, page: 1 }))} defaultValue="rating">
           <option value="rating">Top rated</option>
           <option value="experience">Most experienced</option>
           <option value="price_low">Price: low to high</option>
@@ -47,9 +47,9 @@ export default function StudentSearchMentors() {
             {data.items.map((m) => (
               <div key={m.id} className="session-card">
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent/10 text-sm font-medium text-accent">
-                  {initials(m.user.full_name)}
+                  {initials(m.designation || m.headline || 'Mentor')}
                 </div>
-                <p className="mt-3 font-medium text-ink-800 dark:text-ink-50">{m.user.full_name}</p>
+                <p className="mt-3 font-medium text-ink-800 dark:text-ink-50">{m.designation || m.headline || `Mentor #${m.id}`}</p>
                 <p className="text-sm text-ink-400 line-clamp-1">{m.headline}</p>
                 <div className="mt-2 flex flex-wrap gap-1">
                   {m.expertise_fields.slice(0, 2).map((f) => <Badge key={f.id}>{f.name}</Badge>)}
