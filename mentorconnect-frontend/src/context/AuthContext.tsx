@@ -2,14 +2,19 @@ import { createContext, useContext, useCallback, ReactNode } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setCredentials, logout as logoutAction, updateUser } from '@/store/authSlice';
 import { authApi } from '@/api/endpoints';
-import { LoginRequest, RegisterRequest, User, RoleName } from '@/types';
+import { LoginRequest, StudentRegisterRequest, MentorRegisterRequest, User, RoleName } from '@/types';
 
 interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   role: RoleName | null;
-  login: (data: LoginRequest) => Promise<void>;
-  register: (data: RegisterRequest) => Promise<void>;
+  login: (data: LoginRequest) => Promise<User>;
+  // Registration does NOT log the account in — the backend only returns the
+  // created user, no tokens. OTP verification requires being logged in, so
+  // the real flow is register -> login -> verify (accounts can log in while
+  // status is "pending").
+  registerStudent: (data: StudentRegisterRequest) => Promise<User>;
+  registerMentor: (data: MentorRegisterRequest) => Promise<User>;
   logout: () => void;
   refreshUser: (user: User) => void;
 }
@@ -18,7 +23,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const dispatch = useAppDispatch();
-  const { user, isAuthenticated } = useAppSelector((s) => s.auth);
+  const { user, isAuthenticated, refreshToken } = useAppSelector((s) => s.auth);
 
   const login = useCallback(
     async (data: LoginRequest) => {
@@ -26,32 +31,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       dispatch(
         setCredentials({
           user: res.user,
-          accessToken: res.access_token,
-          refreshToken: res.refresh_token,
+          accessToken: res.tokens.access_token,
+          refreshToken: res.tokens.refresh_token,
         })
       );
+      return res.user;
     },
     [dispatch]
   );
 
-  const register = useCallback(
-    async (data: RegisterRequest) => {
-      const res = await authApi.register(data);
-      dispatch(
-        setCredentials({
-          user: res.user,
-          accessToken: res.access_token,
-          refreshToken: res.refresh_token,
-        })
-      );
-    },
-    [dispatch]
-  );
+  const registerStudent = useCallback((data: StudentRegisterRequest) => authApi.registerStudent(data), []);
+  const registerMentor = useCallback((data: MentorRegisterRequest) => authApi.registerMentor(data), []);
 
   const logout = useCallback(() => {
-    authApi.logout().catch(() => void 0);
+    if (refreshToken) authApi.logout(refreshToken).catch(() => void 0);
     dispatch(logoutAction());
-  }, [dispatch]);
+  }, [dispatch, refreshToken]);
 
   const refreshUser = useCallback(
     (u: User) => {
@@ -67,7 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         role: user?.role.name ?? null,
         login,
-        register,
+        registerStudent,
+        registerMentor,
         logout,
         refreshUser,
       }}
