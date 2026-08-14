@@ -48,10 +48,10 @@ export default function StudentMyRequests() {
               <div key={r.id} className="session-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-sm font-medium text-accent">
-                    {initials(r.mentor.user.full_name)}
+                    {initials(r.mentor.designation || r.mentor.headline || 'Mentor')}
                   </div>
                   <div>
-                    <p className="font-medium text-ink-800 dark:text-ink-50">{r.mentor.user.full_name}</p>
+                    <p className="font-medium text-ink-800 dark:text-ink-50">{r.mentor.designation || r.mentor.headline || `Mentor #${r.mentor.id}`}</p>
                     <p className="text-sm text-ink-400 line-clamp-1">{r.message}</p>
                     <p className="text-xs text-ink-400 mt-0.5">{formatDate(r.created_at)}</p>
                   </div>
