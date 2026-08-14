@@ -63,10 +63,10 @@ export default function StudentBookMentor() {
     <div className="max-w-3xl">
       <div className="flex items-center gap-4">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-lg font-medium text-accent">
-          {initials(mentor.user.full_name)}
+          {initials(mentor.designation || mentor.headline || 'Mentor')}
         </div>
         <div>
-          <h1 className="font-display text-2xl font-semibold text-ink-800 dark:text-ink-50">{mentor.user.full_name}</h1>
+          <h1 className="font-display text-2xl font-semibold text-ink-800 dark:text-ink-50">{mentor.designation || mentor.headline || `Mentor #${mentor.id}`}</h1>
           <p className="text-sm text-ink-500 dark:text-ink-300">{mentor.headline}</p>
         </div>
       </div>
