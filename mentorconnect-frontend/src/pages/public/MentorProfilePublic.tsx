@@ -5,6 +5,8 @@ import { mentorsApi, ratingsApi } from '@/api/endpoints';
 import { PageSpinner, Badge, EmptyState } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { initials, formatDate } from '@/lib/utils';
+import { parseJsonList } from '@/utils/parseJsonList';
+import { Qualification, Achievement } from '@/types';
 
 export default function MentorProfilePublic() {
   const { id } = useParams<{ id: string }>();
@@ -26,18 +28,21 @@ export default function MentorProfilePublic() {
   if (isLoading) return <PageSpinner />;
   if (!mentor) return <EmptyState icon={Briefcase} title="Mentor not found" />;
 
+  const qualifications = parseJsonList<Qualification>(mentor.qualifications);
+  const achievements = parseJsonList<Achievement>(mentor.achievements);
+
   const bookHref = isAuthenticated && role === 'student' ? `/student/book/${mentor.id}` : '/login';
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-12">
       <div className="session-card flex flex-col sm:flex-row gap-6">
         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent/10 text-2xl font-medium text-accent shrink-0">
-          {initials(mentor.user.full_name)}
+          {initials(mentor.designation || mentor.headline || 'Mentor')}
         </div>
         <div className="flex-1">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h1 className="font-display text-2xl font-semibold text-ink-800 dark:text-ink-50">{mentor.user.full_name}</h1>
+              <h1 className="font-display text-2xl font-semibold text-ink-800 dark:text-ink-50">{mentor.designation || mentor.headline || `Mentor #${mentor.id}`}</h1>
               <p className="text-ink-500 dark:text-ink-300">{mentor.headline}</p>
             </div>
             <Link to={bookHref} className="btn-primary">Book a session</Link>
@@ -73,11 +78,11 @@ export default function MentorProfilePublic() {
         </div>
       )}
 
-      {mentor.qualifications?.length > 0 && (
+      {qualifications.length > 0 && (
         <div className="session-card mt-6">
           <h2 className="font-display text-lg font-medium text-ink-800 dark:text-ink-50 mb-3">Qualifications</h2>
           <ul className="space-y-2">
-            {mentor.qualifications.map((q, i) => (
+            {qualifications.map((q, i) => (
               <li key={i} className="text-sm text-ink-600 dark:text-ink-300">
                 <span className="font-medium text-ink-800 dark:text-ink-50">{q.degree}</span> — {q.institute} ({q.year})
               </li>
@@ -86,11 +91,11 @@ export default function MentorProfilePublic() {
         </div>
       )}
 
-      {mentor.achievements?.length > 0 && (
+      {achievements.length > 0 && (
         <div className="session-card mt-6">
           <h2 className="font-display text-lg font-medium text-ink-800 dark:text-ink-50 mb-3">Achievements</h2>
           <ul className="space-y-3">
-            {mentor.achievements.map((a, i) => (
+            {achievements.map((a, i) => (
               <li key={i}>
                 <p className="text-sm font-medium text-ink-800 dark:text-ink-50">{a.title} ({a.year})</p>
                 <p className="text-sm text-ink-500 dark:text-ink-300">{a.description}</p>
@@ -102,11 +107,11 @@ export default function MentorProfilePublic() {
 
       <div className="session-card mt-6">
         <h2 className="font-display text-lg font-medium text-ink-800 dark:text-ink-50 mb-3">Reviews</h2>
-        {!ratings?.items.length ? (
+        {!ratings?.length ? (
           <p className="text-sm text-ink-400">No reviews yet.</p>
         ) : (
           <ul className="space-y-4">
-            {ratings.items.map((r) => (
+            {ratings.map((r) => (
               <li key={r.id} className="border-b border-ink-100 dark:border-ink-700 pb-3 last:border-0">
                 <div className="flex items-center gap-2">
                   {Array.from({ length: 5 }).map((_, i) => (
