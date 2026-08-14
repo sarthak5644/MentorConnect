@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { authApi } from '@/api/endpoints';
 import { Input, Button, useToast } from '@/components/ui';
+import CaptchaField, { CaptchaFieldHandle } from '@/components/auth/CaptchaField';
 import { extractErrorMessage } from '@/api/client';
 
 export default function ForgotPassword() {
@@ -10,15 +11,19 @@ export default function ForgotPassword() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [captchaSessionId, setCaptchaSessionId] = useState('');
+  const [captchaAnswer, setCaptchaAnswer] = useState('');
+  const captchaRef = useRef<CaptchaFieldHandle>(null);
 
   const onSubmit = async (data: { email: string }) => {
     setLoading(true);
     try {
-      await authApi.forgotPassword(data);
+      await authApi.forgotPassword({ ...data, captcha_session_id: captchaSessionId, captcha_answer: captchaAnswer });
       showToast('If that email exists, an OTP has been sent.', 'success');
       navigate('/reset-password', { state: { email: data.email } });
     } catch (err) {
       showToast(extractErrorMessage(err), 'error');
+      captchaRef.current?.refresh();
     } finally {
       setLoading(false);
     }
@@ -30,6 +35,13 @@ export default function ForgotPassword() {
       <p className="mt-1 text-sm text-ink-500 dark:text-ink-300">We'll send an OTP to reset your password.</p>
       <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
         <Input label="Email" type="email" {...register('email', { required: 'Email is required' })} error={errors.email?.message} />
+        <CaptchaField
+          ref={captchaRef}
+          sessionId={captchaSessionId}
+          answer={captchaAnswer}
+          onSessionIdChange={setCaptchaSessionId}
+          onAnswerChange={setCaptchaAnswer}
+        />
         <Button type="submit" className="w-full" isLoading={loading}>Send OTP</Button>
       </form>
       <p className="mt-6 text-center text-sm text-ink-500 dark:text-ink-300">
