@@ -27,8 +27,7 @@ export default function MentorDocuments() {
     mutationFn: (file: File) => {
       const fd = new FormData();
       fd.append('file', file);
-      fd.append('document_type', 'ID_PROOF');
-      return mentorsApi.uploadDocument(fd);
+      return mentorsApi.uploadDocument(fd, 'ID_PROOF');
     },
     onSuccess: () => {
       showToast('Document uploaded', 'success');
