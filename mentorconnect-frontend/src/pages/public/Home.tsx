@@ -8,7 +8,7 @@ import { initials } from '@/lib/utils';
 export default function Home() {
   const { data, isLoading } = useQuery({
     queryKey: ['featured-mentors'],
-    queryFn: () => mentorsApi.search({ sort_by: 'rating', page: 1, page_size: 4 }),
+    queryFn: () => mentorsApi.search({ page: 1, page_size: 4 }),
   });
 
   return (
@@ -60,9 +60,9 @@ export default function Home() {
             {data?.items.map((m) => (
               <Link key={m.id} to={`/mentors/${m.id}`} className="session-card block">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-sm font-medium text-accent">
-                  {initials(m.user.full_name)}
+                  {initials(m.designation || m.headline || 'Mentor')}
                 </div>
-                <p className="mt-3 font-medium text-ink-800 dark:text-ink-50">{m.user.full_name}</p>
+                <p className="mt-3 font-medium text-ink-800 dark:text-ink-50">{m.designation || m.headline || `Mentor #${m.id}`}</p>
                 <p className="text-sm text-ink-400 line-clamp-1">{m.headline}</p>
                 <p className="mt-2 text-xs font-mono text-accent">★ {m.average_rating.toFixed(1)} ({m.total_ratings})</p>
               </Link>
