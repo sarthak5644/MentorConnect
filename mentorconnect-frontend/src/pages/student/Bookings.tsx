@@ -15,11 +15,27 @@ const statusVariant: Record<BookingStatus, 'default' | 'success' | 'warning' | '
   [BookingStatus.NO_SHOW]: 'default',
 };
 
+// The backend has no /ratings/me endpoint, so there's no way to ask "has
+// this booking been rated?" from the server. We track it locally instead:
+// once a rating succeeds, remember the booking id (in this browser) so the
+// Rate button disappears for it. If they rate twice from a different
+// device/browser, the backend correctly rejects the second attempt with a
+// 409, surfaced as a normal error toast.
+const RATED_STORAGE_KEY = 'mc_rated_booking_ids';
+function loadRatedIds(): Set<number> {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(RATED_STORAGE_KEY) ?? '[]'));
+  } catch {
+    return new Set();
+  }
+}
+
 export default function StudentBookings() {
   const [page, setPage] = useState(1);
   const [cancelId, setCancelId] = useState<number | null>(null);
   const [cancelReason, setCancelReason] = useState('');
   const [rateBookingId, setRateBookingId] = useState<number | null>(null);
+  const [ratedIds, setRatedIds] = useState<Set<number>>(loadRatedIds);
   const { showToast } = useToast();
   const qc = useQueryClient();
 
@@ -66,7 +82,7 @@ export default function StudentBookings() {
                   {b.status === BookingStatus.SCHEDULED && (
                     <Button size="sm" variant="danger" onClick={() => setCancelId(b.id)}>Cancel</Button>
                   )}
-                  {b.status === BookingStatus.COMPLETED && !b.rating && (
+                  {b.status === BookingStatus.COMPLETED && !ratedIds.has(b.id) && (
                     <Button size="sm" onClick={() => setRateBookingId(b.id)}>Rate</Button>
                   )}
                 </div>
@@ -94,7 +110,14 @@ export default function StudentBookings() {
       <RateBookingModal
         bookingId={rateBookingId}
         onClose={() => setRateBookingId(null)}
-        onSuccess={() => qc.invalidateQueries({ queryKey: ['bookings'] })}
+        onSuccess={() => {
+          if (rateBookingId != null) {
+            const next = new Set(ratedIds).add(rateBookingId);
+            setRatedIds(next);
+            localStorage.setItem(RATED_STORAGE_KEY, JSON.stringify([...next]));
+          }
+          qc.invalidateQueries({ queryKey: ['bookings'] });
+        }}
       />
     </div>
   );
