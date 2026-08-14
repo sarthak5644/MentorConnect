@@ -76,20 +76,19 @@ export default function AdminMentorManagement() {
               <div key={m.id} className="session-card flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-xs font-medium text-accent">
-                    {initials(m.user.full_name)}
+                    {initials(m.designation || `Mentor ${m.id}`)}
                   </div>
                   <div>
-                    <p className="font-medium text-ink-800 dark:text-ink-50">{m.user.full_name}</p>
-                    <p className="text-xs text-ink-400">{m.user.email} · ★ {m.average_rating.toFixed(1)}</p>
+                    <p className="font-medium text-ink-800 dark:text-ink-50">Mentor #{m.id} (user #{m.user_id})</p>
+                    <p className="text-xs text-ink-400">{m.headline || m.designation || 'No headline'} · ★ {m.average_rating.toFixed(1)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant={approvalVariant[m.approval_status]}>{m.approval_status}</Badge>
-                  {m.user.status === UserStatus.BLOCKED ? (
-                    <Button size="sm" onClick={() => unblockMutation.mutate(m.user.id)}>Unblock</Button>
-                  ) : (
-                    <Button size="sm" variant="danger" onClick={() => setBlockId(m.user.id)}>Block</Button>
-                  )}
+                  {/* Blocking/unblocking needs the account's status, which MentorOut
+                      doesn't expose — always showing "Block" here until the backend
+                      returns that, or you fetch the user separately. */}
+                  <Button size="sm" variant="danger" onClick={() => setBlockId(m.user_id)}>Block</Button>
                 </div>
               </div>
             ))}
