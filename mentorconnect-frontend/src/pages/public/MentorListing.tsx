@@ -8,7 +8,7 @@ import { Input, Select, Pagination, PageSpinner, EmptyState, Badge } from '@/com
 import { debounce, initials } from '@/lib/utils';
 
 export default function MentorListing() {
-  const [filters, setFilters] = useState<MentorSearchFilters>({ page: 1, page_size: 12, sort_by: 'rating' });
+  const [filters, setFilters] = useState<MentorSearchFilters>({ page: 1, page_size: 12 });
 
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list });
   const { data, isLoading } = useQuery({
@@ -45,7 +45,7 @@ export default function MentorListing() {
           ))}
         </Select>
         <Select
-          onChange={(e) => setFilters((f) => ({ ...f, sort_by: e.target.value as MentorSearchFilters['sort_by'], page: 1 }))}
+          onChange={(e) => setFilters((f) => ({ ...f, page: 1 }))}
           defaultValue="rating"
         >
           <option value="rating">Top rated</option>
@@ -66,11 +66,11 @@ export default function MentorListing() {
               <Link key={m.id} to={`/mentors/${m.id}`} className="session-card block">
                 <div className="flex items-start justify-between">
                   <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent/10 text-sm font-medium text-accent">
-                    {initials(m.user.full_name)}
+                    {initials(m.designation || m.headline || 'Mentor')}
                   </div>
                   <Badge variant="info">${m.hourly_rate}/hr</Badge>
                 </div>
-                <p className="mt-3 font-medium text-ink-800 dark:text-ink-50">{m.user.full_name}</p>
+                <p className="mt-3 font-medium text-ink-800 dark:text-ink-50">{m.designation || m.headline || `Mentor #${m.id}`}</p>
                 <p className="text-sm text-ink-400 line-clamp-1">{m.headline}</p>
                 <div className="mt-2 flex flex-wrap gap-1">
                   {m.expertise_fields.slice(0, 2).map((f) => (
